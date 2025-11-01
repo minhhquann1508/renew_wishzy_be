@@ -27,6 +27,15 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  private sanitizeUser(user: User): User {
+    delete user.password;
+    delete user.verificationToken;
+    delete user.verificationTokenExp;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExp;
+    return user;
+  }
+
   async register(registerUserDto: RegisterUserDto): Promise<void> {
     const { email, password, confirmPassword, fullName } = registerUserDto;
 
@@ -63,9 +72,11 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { verificationToken: token },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect(['user.verificationToken', 'user.verificationTokenExp'])
+      .where('user.verificationToken = :token', { token })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException('Invalid verification token');
@@ -133,12 +144,7 @@ export class AuthService {
       throw new BadRequestException('Invalid password');
     }
 
-    // Remove sensitive data
-    delete user.password;
-    delete user.verificationToken;
-    delete user.verificationTokenExp;
-
-    return user;
+    return this.sanitizeUser(user);
   }
 
   async forgotPassword(email: string) {
@@ -195,7 +201,11 @@ export class AuthService {
       throw new BadRequestException('Passwords do not match');
     }
 
-    const user = await this.userRepository.findOne({ where: { resetPasswordToken } });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect(['user.resetPasswordToken', 'user.resetPasswordExp'])
+      .where('user.resetPasswordToken = :resetPasswordToken', { resetPasswordToken })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException('Invalid reset token');

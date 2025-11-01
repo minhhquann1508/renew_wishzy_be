@@ -6,9 +6,11 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@Public()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -75,6 +77,7 @@ export class AuthController {
     return {
       user,
       accessToken,
+      message: 'Login successful',
     };
   }
 

@@ -40,10 +40,16 @@ export class User {
   @Column({ type: 'boolean', default: false })
   verified!: boolean;
 
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'verification_token' })
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    name: 'verification_token',
+    select: false,
+  })
   verificationToken?: string;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'verification_token_exp' })
+  @Column({ type: 'timestamp', nullable: true, name: 'verification_token_exp', select: false })
   verificationTokenExp?: Date;
 
   @Column({ type: 'text', nullable: true })
@@ -79,10 +85,16 @@ export class User {
   @Column({ type: 'boolean', default: false, name: 'is_instructor_active' })
   isInstructorActive!: boolean;
 
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'reset_password_token' })
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    name: 'reset_password_token',
+    select: false,
+  })
   resetPasswordToken?: string;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'reset_password_exp' })
+  @Column({ type: 'timestamp', nullable: true, name: 'reset_password_exp', select: false })
   resetPasswordExp?: Date;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })

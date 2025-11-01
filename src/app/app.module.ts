@@ -9,7 +9,9 @@ import { UsersModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './modules/mail/mail.module';
-import Joi from 'joi';
+import * as Joi from 'joi';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -67,6 +69,14 @@ import Joi from 'joi';
   ],
   providers: [
     // Global Guards
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
