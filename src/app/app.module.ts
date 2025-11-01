@@ -12,6 +12,7 @@ import { MailModule } from './modules/mail/mail.module';
 import * as Joi from 'joi';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     AuthModule,
     CategoriesModule,
     UsersModule,
+    CoursesModule,
   ],
   providers: [
     // Global Guards
