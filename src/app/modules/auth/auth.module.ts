@@ -1,31 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './services/auth.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserModule } from '../user/user.module';
-import { AuthController } from './controllers/auth.controller';
-import { BearerStrategy } from './strategies/bearer.strategy';
-import { ApiKeyStrategy } from './strategies/api-key.strategy';
-import { CommonModule } from '../../common/common.module';
+import { ConfigModule } from '@nestjs/config';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { User } from '../../entities/user.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-    imports: [
-        PassportModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-                signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION', '15m') },
-            }),
-            inject: [ConfigService],
-        }),
-        UserModule,
-        CommonModule,
-    ],
-    controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, BearerStrategy, ApiKeyStrategy],
-    exports: [AuthService],
+  imports: [TypeOrmModule.forFeature([User]), MailModule, JwtModule.register({}), ConfigModule],
+  controllers: [AuthController],
+  providers: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

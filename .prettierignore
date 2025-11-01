@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+dist
+build
+
+# Coverage
+coverage
+*.lcov
+
+# Logs
+logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Other
+*.min.js
+*.min.css
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
-import { SharedModule } from './modules/shared/shared.module';
-import { AuthenticationGuard } from './modules/auth/guards/auth.guard';
-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import configuration from '../config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeOrmAsyncConfig } from 'src/database/data-source';
+import { typeOrmAsyncConfig } from '../database/data-source';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { HttpExceptionFilter } from './common/exception/http-exception.filter';
-import { CommonModule } from './common/common.module';
-import * as Joi from 'joi';
+import { UsersModule } from './modules/users/users.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { MailModule } from './modules/mail/mail.module';
+import Joi from 'joi';
 
 @Module({
   imports: [
@@ -24,33 +22,25 @@ import * as Joi from 'joi';
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         PORT: Joi.number().default(3000),
         DATABASE_ENABLED: Joi.boolean().default(false),
-        DB_HOST: Joi.string().when('DATABASE_ENABLED', {
-          is: true,
-          then: Joi.required(),
-          otherwise: Joi.optional(),
-        }),
+        DB_URL: Joi.string().optional(),
+        DB_HOST: Joi.string().optional(),
         DB_PORT: Joi.number().default(5432),
-        DB_USERNAME: Joi.string().when('DATABASE_ENABLED', {
-          is: true,
-          then: Joi.required(),
-          otherwise: Joi.optional(),
-        }),
-        DB_PASSWORD: Joi.string().when('DATABASE_ENABLED', {
-          is: true,
-          then: Joi.required(),
-          otherwise: Joi.optional(),
-        }),
-        DB_NAME: Joi.string().when('DATABASE_ENABLED', {
-          is: true,
-          then: Joi.required(),
-          otherwise: Joi.optional(),
-        }),
+        DB_USERNAME: Joi.string().optional(),
+        DB_PASSWORD: Joi.string().optional(),
+        DB_NAME: Joi.string().optional(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1h'),
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
         THROTTLE_TTL: Joi.number().default(60),
         THROTTLE_LIMIT: Joi.number().default(10),
+        MAIL_HOST: Joi.string().default('smtp.gmail.com'),
+        MAIL_PORT: Joi.number().default(587),
+        MAIL_SECURE: Joi.boolean().default(false),
+        MAIL_USER: Joi.string().required(),
+        MAIL_PASSWORD: Joi.string().required(),
+        MAIL_FROM: Joi.string().default('noreply@wishzy.com'),
+        FRONTEND_URL: Joi.string().default('http://localhost:3001'),
       }),
     }),
 
@@ -58,22 +48,22 @@ import * as Joi from 'joi';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => [{
-        ttl: config.get('THROTTLE_TTL'),
-        limit: config.get('THROTTLE_LIMIT'),
-      }],
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: config.get('THROTTLE_TTL'),
+          limit: config.get('THROTTLE_LIMIT'),
+        },
+      ],
     }),
 
     // Database - conditionally loaded
     ...conditionalImports(),
 
-    // Common modules
-    CommonModule,
-
     // Application Modules
+    MailModule,
     AuthModule,
-    UserModule,
-    SharedModule,
+    CategoriesModule,
+    UsersModule,
   ],
   providers: [
     // Global Guards
@@ -81,27 +71,14 @@ import * as Joi from 'joi';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    // Uncomment to apply authentication globally
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthenticationGuard,
-    // },
-
-    // Global Filters
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
   ],
 })
-export class AppModule { }
+export class AppModule {}
 
 /**
  * Conditionally import modules based on configuration
  */
 function conditionalImports() {
-  // Check environment variable directly since the ConfigModule might not be initialized yet
   const databaseEnabled = process.env.DATABASE_ENABLED === 'true';
-
   return databaseEnabled ? [TypeOrmModule.forRootAsync(typeOrmAsyncConfig)] : [];
 }

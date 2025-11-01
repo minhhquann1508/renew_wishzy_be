@@ -1,0 +1,131 @@
+import { Controller, Post, Body, Get, Query, Put, Res, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { AuthService } from './auth.service';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+
+@ApiTags('Authentication')
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully. Verification email sent.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - Passwords do not match' })
+  @ApiResponse({ status: 409, description: 'Conflict - Email already exists' })
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    await this.authService.register(registerUserDto);
+
+    return {
+      message: 'Registration successful. Please check your email to verify your account.',
+    };
+  }
+
+  @Get('verify-email')
+  @ApiOperation({ summary: 'Verify user email with token' })
+  @ApiQuery({ name: 'token', description: 'Email verification token', required: true })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - Token expired' })
+  @ApiResponse({ status: 404, description: 'Not found - Invalid token' })
+  async verifyEmail(@Query('token') token: string) {
+    await this.authService.verifyEmail(token);
+    return {
+      message: 'Email verified successfully. You can now login.',
+    };
+  }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({ status: 200, description: 'Verification email sent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - Email already verified' })
+  @ApiResponse({ status: 404, description: 'Not found - User not found' })
+  async resendVerification(@Body() resendVerificationDto: ResendVerificationDto) {
+    await this.authService.resendVerificationEmail(resendVerificationDto.email);
+    return {
+      message: 'Verification email sent successfully',
+    };
+  }
+
+  @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid credentials' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
+  @ApiResponse({ status: 404, description: 'Not found - User not found' })
+  async login(@Body() loginUserDto: LoginUserDto, @Res({ passthrough: true }) res: Response) {
+    const user = await this.authService.login(loginUserDto);
+    const accessToken = this.authService.generateAccessToken(user);
+    const refreshToken = this.authService.generateRefreshToken(user);
+
+    // Set refresh token in httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      user,
+      accessToken,
+    };
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent successfully' })
+  @ApiResponse({ status: 404, description: 'Not found - User not found' })
+  async forgotPassword(@Body('email') email: string) {
+    await this.authService.forgotPassword(email);
+    return {
+      message: 'If the email exists, a password reset link has been sent.',
+    };
+  }
+
+  @Put('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiQuery({ name: 'token', description: 'Password reset token', required: true })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Passwords do not match or token expired',
+  })
+  @ApiResponse({ status: 404, description: 'Not found - Invalid token' })
+  async resetPassword(@Query('token') token: string, @Body() resetPasswordDto: ResetPasswordDto) {
+    await this.authService.resetPassword(resetPasswordDto, token);
+    return {
+      message: 'Password reset successfully. You can now login with your new password.',
+    };
+  }
+
+  @Post('refresh-token')
+  @ApiOperation({ summary: 'Refresh access token using refresh token from cookie' })
+  @ApiResponse({ status: 200, description: 'New access token generated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired refresh token' })
+  async refreshToken(@Req() req: Request) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      throw new Error('Refresh token not found in cookies');
+    }
+
+    return this.authService.refreshToken({ refreshToken });
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout and clear refresh token cookie' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refreshToken');
+    return {
+      message: 'Logout successful',
+    };
+  }
+}
