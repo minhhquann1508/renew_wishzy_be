@@ -16,6 +16,7 @@ import { CoursesModule } from './modules/courses/courses.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
 import { LecturesModule } from './modules/lectures/lectures.module';
+import { VouchersModule } from './modules/vouchers/vouchers.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { LecturesModule } from './modules/lectures/lectures.module';
     DocumentsModule,
     ChaptersModule,
     LecturesModule,
+    VouchersModule,
   ],
   providers: [
     // Global Guards

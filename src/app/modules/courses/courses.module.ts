@@ -9,5 +9,6 @@ import { CourseOwnershipGuard } from './guards/course-ownership.guard';
   imports: [TypeOrmModule.forFeature([Course])],
   controllers: [CoursesController],
   providers: [CoursesService, CourseOwnershipGuard],
+  exports: [CoursesService],
 })
 export class CoursesModule {}

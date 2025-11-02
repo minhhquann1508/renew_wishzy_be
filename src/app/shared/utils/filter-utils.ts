@@ -29,3 +29,17 @@ export interface DocumentFilter {
   entityType?: string;
   createdBy?: string;
 }
+
+export interface VoucherFilter {
+  page?: number;
+  limit?: number;
+  name?: string;
+  code?: string;
+  discountType?: string;
+  applyScope?: string;
+  categoryId?: string;
+  courseId?: string;
+  isActive?: boolean;
+  startDate?: Date;
+  endDate?: Date;
+}
