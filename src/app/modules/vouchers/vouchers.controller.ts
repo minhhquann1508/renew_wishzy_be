@@ -6,10 +6,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User, UserRole } from 'src/app/entities/user.entity';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { VoucherFilter } from 'src/app/shared/utils/filter-utils';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('vouchers')
 @ApiTags('Vouchers')
+@ApiBearerAuth('bearer')
 export class VouchersController {
   constructor(private readonly vouchersService: VouchersService) {}
 

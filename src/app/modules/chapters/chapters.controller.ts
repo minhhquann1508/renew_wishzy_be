@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@n
 import { ChaptersService } from './chapters.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User, UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
@@ -11,6 +11,7 @@ import { ChapterOwnershipGuard } from './guards/chapter-ownership.guard';
 
 @Controller('chapters')
 @ApiTags('Chapters')
+@ApiBearerAuth('bearer')
 export class ChaptersController {
   constructor(private readonly chaptersService: ChaptersService) {}
 

@@ -15,7 +15,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from 'src/app/entities/user.entity';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
@@ -24,6 +24,7 @@ import { CourseOwnershipGuard } from './guards/course-ownership.guard';
 import { CourseLevel } from 'src/app/entities/enums/course.enum';
 
 @ApiTags('Courses')
+@ApiBearerAuth('bearer')
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}

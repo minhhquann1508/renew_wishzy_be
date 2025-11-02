@@ -1,37 +1,78 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFilter } from 'src/app/shared/utils/filter-utils';
+import { UserRole } from 'src/app/entities/user.entity';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Users')
-@ApiBearerAuth()
+@ApiBearerAuth('bearer')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Roles(UserRole.ADMIN)
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.createNewUserByAdmin(createUserDto);
+    return {
+      message: 'User created successfully',
+      ...user,
+    };
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Roles(UserRole.ADMIN)
+  async findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('fullName') fullName: string,
+    @Query('email') email: string,
+    @Query('role') role: UserRole,
+  ) {
+    const filters: UserFilter = {
+      page,
+      limit,
+      fullName,
+      email,
+      role,
+    };
+    const result = await this.usersService.findAll(filters);
+
+    return {
+      message: 'Courses retrieved successfully',
+      data: result,
+    };
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN)
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    const user = this.usersService.findOne(id);
+    return {
+      message: 'User retrieved successfully',
+      ...user,
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Roles(UserRole.ADMIN)
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    const updatedUser = await this.usersService.update(id, updateUserDto);
+    return {
+      message: 'User updated successfully',
+      ...updatedUser,
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Roles(UserRole.ADMIN)
+  async remove(@Param('id') id: string) {
+    await this.usersService.remove(id);
+    return {
+      message: 'User deleted successfully',
+    };
   }
 }

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nes
 import { LecturesService } from './lectures.service';
 import { CreateLectureDto } from './dto/create-lecture.dto';
 import { UpdateLectureDto } from './dto/update-lecture.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User, UserRole } from 'src/app/entities/user.entity';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -11,6 +11,7 @@ import { LectureOwnershipGuard } from './guards/lecture-ownership.guard';
 
 @Controller('lectures')
 @ApiTags('Lectures')
+@ApiBearerAuth('bearer')
 export class LecturesController {
   constructor(private readonly lecturesService: LecturesService) {}
 
