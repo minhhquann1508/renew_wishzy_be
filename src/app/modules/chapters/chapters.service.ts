@@ -31,12 +31,22 @@ export class ChaptersService {
   }
 
   async findAllChapterOfCourse(courseId: string): Promise<Chapter[]> {
-    const chapters = await this.chapterRepository.find({ where: { courseId } });
+    const chapters = await this.chapterRepository
+      .createQueryBuilder('chapter')
+      .leftJoinAndSelect('chapter.course', 'course')
+      .select(['chapter', 'course.id', 'course.name'])
+      .where('chapter.courseId = :courseId', { courseId })
+      .getMany();
     return chapters;
   }
 
   async findOne(id: string): Promise<Chapter> {
-    const chapter = await this.chapterRepository.findOne({ where: { id } });
+    const chapter = await this.chapterRepository
+      .createQueryBuilder('chapter')
+      .leftJoinAndSelect('chapter.course', 'course')
+      .select(['chapter', 'course.id', 'course.name'])
+      .where('chapter.id = :id', { id })
+      .getOne();
     if (!chapter) {
       throw new BadRequestException('Chapter not found');
     }

@@ -15,7 +15,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from 'src/app/entities/user.entity';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
@@ -24,6 +24,7 @@ import { CourseOwnershipGuard } from './guards/course-ownership.guard';
 import { CourseLevel } from 'src/app/entities/enums/course.enum';
 
 @ApiTags('Courses')
+@ApiBearerAuth('bearer')
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
@@ -40,29 +41,18 @@ export class CoursesController {
 
   @Get()
   @Public()
-  async getAllCourseForUser(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('name') name?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('createdBy') createdBy?: string,
-    @Query('rating') rating?: string,
-    @Query('courseLevel') courseLevel?: string,
-    @Query('minPrice') minPrice?: string,
-    @Query('maxPrice') maxPrice?: string,
-    @Query('status') status?: string,
-  ) {
+  async getAllCourseForUser(@Query() query: any) {
     const filter: CourseFilter = {
-      page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 10,
-      name,
-      categoryId,
-      createdBy,
-      rating: rating ? Number(rating) : undefined,
-      courseLevel: courseLevel ? CourseLevel[courseLevel] : undefined,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      status,
+      page: query.page ? Number(query.page) : 1,
+      limit: query.limit ? Number(query.limit) : 10,
+      name: query.name,
+      categoryId: query.categoryId,
+      createdBy: query.createdBy,
+      rating: query.rating ? Number(query.rating) : undefined,
+      courseLevel: query.courseLevel ? CourseLevel[query.courseLevel] : undefined,
+      minPrice: query.minPrice ? Number(query.minPrice) : undefined,
+      maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
+      status: query.status,
     };
 
     const results = await this.coursesService.getAllCourseForUser(filter);

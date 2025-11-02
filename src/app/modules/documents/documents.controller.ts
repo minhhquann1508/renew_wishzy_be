@@ -12,7 +12,7 @@ import {
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User, UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
@@ -21,6 +21,7 @@ import { DocumentOwnershipGuard } from './guards/document-ownership.guard';
 
 @Controller('documents')
 @ApiTags('Documents')
+@ApiBearerAuth('bearer')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 

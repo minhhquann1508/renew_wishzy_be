@@ -33,7 +33,13 @@ export class CoursesService {
       status,
     } = filter;
 
-    const queryBuilder = this.courseRepository.createQueryBuilder('course');
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.category', 'category')
+      .leftJoin('course.creator', 'creator')
+      .addSelect(['creator.id', 'creator.fullName', 'creator.email'])
+      .leftJoinAndSelect('course.chapters', 'chapter');
+
     if (name) {
       queryBuilder.andWhere('course.name LIKE :name', { name: `%${name}%` });
     }
@@ -79,7 +85,14 @@ export class CoursesService {
   }
 
   async findOne(id: string): Promise<Course> {
-    const course = await this.courseRepository.findOne({ where: { id } });
+    const course = await this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.category', 'category')
+      .leftJoin('course.creator', 'creator')
+      .addSelect(['creator.id', 'creator.fullName', 'creator.email', 'creator.avatar'])
+      .leftJoinAndSelect('course.chapters', 'chapter')
+      .where('course.id = :id', { id })
+      .getOne();
 
     if (!course) {
       throw new BadRequestException(`Course with ID ${id} not found`);

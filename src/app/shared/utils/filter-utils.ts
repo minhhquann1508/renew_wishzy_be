@@ -1,4 +1,5 @@
 import { CourseLevel } from 'src/app/entities/enums/course.enum';
+import { UserRole } from 'src/app/entities/user.entity';
 
 export interface CategoryFilter {
   page?: number;
@@ -42,4 +43,12 @@ export interface VoucherFilter {
   isActive?: boolean;
   startDate?: Date;
   endDate?: Date;
+}
+
+export interface UserFilter {
+  page?: number;
+  limit?: number;
+  fullName?: string;
+  email?: string;
+  role?: UserRole;
 }
