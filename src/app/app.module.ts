@@ -15,6 +15,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { CoursesModule } from './modules/courses/courses.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
+import { LecturesModule } from './modules/lectures/lectures.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { ChaptersModule } from './modules/chapters/chapters.module';
     CoursesModule,
     DocumentsModule,
     ChaptersModule,
+    LecturesModule,
   ],
   providers: [
     // Global Guards

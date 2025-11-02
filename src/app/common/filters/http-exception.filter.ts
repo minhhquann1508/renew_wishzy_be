@@ -45,19 +45,31 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal server error';
+    let errors = null;
 
-    const message =
-      exception instanceof HttpException ? exception.message : 'Internal server error';
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
 
-    // Log chi tiết lỗi để debug
+      if (typeof exceptionResponse === 'object') {
+        message = (exceptionResponse as any).message || exception.message;
+        errors = (exceptionResponse as any).errors || null;
+      } else {
+        message = exceptionResponse;
+      }
+    } else if (exception instanceof Error) {
+      message = exception.message;
+    }
+
+    // Log detailed error for debugging
     this.logger.error(
       `[${request.method}] ${request.url} - Status: ${status}`,
       exception instanceof Error ? exception.stack : JSON.stringify(exception),
     );
 
-    // Log thêm thông tin exception
+    // Log additional exception info
     if (exception instanceof Error) {
       this.logger.error(`Error Name: ${exception.name}`);
       this.logger.error(`Error Message: ${exception.message}`);
@@ -65,8 +77,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     response.status(status).json({
       success: false,
-      data: null,
-      message,
+      data: errors,
+      message: Array.isArray(message) ? message[0] : message,
       url: request.url,
     });
   }
