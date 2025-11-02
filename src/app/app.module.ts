@@ -13,6 +13,7 @@ import * as Joi from 'joi';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { CoursesModule } from './modules/courses/courses.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { CoursesModule } from './modules/courses/courses.module';
     CategoriesModule,
     UsersModule,
     CoursesModule,
+    DocumentsModule,
   ],
   providers: [
     // Global Guards

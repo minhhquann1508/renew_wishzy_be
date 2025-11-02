@@ -21,6 +21,7 @@ import { UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
 import { CourseFilter } from 'src/app/shared/utils/filter-utils';
 import { CourseOwnershipGuard } from './guards/course-ownership.guard';
+import { CourseLevel } from 'src/app/entities/enums/course.enum';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -58,7 +59,7 @@ export class CoursesController {
       categoryId,
       createdBy,
       rating: rating ? Number(rating) : undefined,
-      courseLevel,
+      courseLevel: courseLevel ? CourseLevel[courseLevel] : undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       status,

@@ -20,3 +20,12 @@ export interface CourseFilter {
   maxPrice?: number;
   status?: string;
 }
+
+export interface DocumentFilter {
+  page?: number;
+  limit?: number;
+  name?: string;
+  entityId?: string;
+  entityType?: string;
+  createdBy?: string;
+}
