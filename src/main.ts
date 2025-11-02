@@ -71,7 +71,26 @@ async function bootstrap() {
   }
 
   // CORS
-  app.enableCors({ origin: 'http://localhost:3000', credentials: true });
+  const allowedOrigins = configService
+    .get<string>(
+      'ALLOWED_ORIGINS',
+      'http://localhost:3000,http://localhost:3001,http://localhost:5173',
+    )
+    .split(',');
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or same-origin)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
 
   await app.listen(port);
 

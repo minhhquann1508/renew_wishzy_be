@@ -25,19 +25,13 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.ADMIN)
-  async findAll(
-    @Query('page') page: number,
-    @Query('limit') limit: number,
-    @Query('fullName') fullName: string,
-    @Query('email') email: string,
-    @Query('role') role: UserRole,
-  ) {
+  async findAll(@Query() query: any) {
     const filters: UserFilter = {
-      page,
-      limit,
-      fullName,
-      email,
-      role,
+      page: query.page ? Number(query.page) : 1,
+      limit: query.limit ? Number(query.limit) : 10,
+      fullName: query.fullName,
+      email: query.email,
+      role: query.role,
     };
     const result = await this.usersService.findAll(filters);
 

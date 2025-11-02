@@ -25,31 +25,19 @@ export class VouchersController {
   }
 
   @Get()
-  async findAll(
-    @Query('page') page: number,
-    @Query('limit') limit: number,
-    @Query('name') name: string,
-    @Query('code') code: string,
-    @Query('discountType') discountType: string,
-    @Query('applyScope') applyScope: string,
-    @Query('categoryId') categoryId: string,
-    @Query('courseId') courseId: string,
-    @Query('isActive') isActive: boolean,
-    @Query('startDate') startDate: Date,
-    @Query('endDate') endDate: Date,
-  ) {
+  async findAll(@Query() query: any) {
     const filter: VoucherFilter = {
-      page,
-      limit,
-      name,
-      code,
-      discountType,
-      applyScope,
-      categoryId,
-      courseId,
-      isActive,
-      startDate,
-      endDate,
+      page: query.page ? Number(query.page) : 1,
+      limit: query.limit ? Number(query.limit) : 10,
+      name: query.name,
+      code: query.code,
+      discountType: query.discountType,
+      applyScope: query.applyScope,
+      categoryId: query.categoryId,
+      courseId: query.courseId,
+      isActive: query.isActive === 'true',
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
     };
     const results = await this.vouchersService.findAll(filter);
 

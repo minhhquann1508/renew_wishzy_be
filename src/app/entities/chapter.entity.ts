@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ApiHideProperty } from '@nestjs/swagger';
+import { Course } from './course.entity';
 
 @Entity('chapters')
 export class Chapter {
@@ -35,4 +39,9 @@ export class Chapter {
 
   @DeleteDateColumn({ type: 'timestamp', name: 'deleted_at', nullable: true })
   deletedAt?: Date;
+
+  @ApiHideProperty()
+  @ManyToOne('Course', 'chapters', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'course_id' })
+  course?: Course;
 }

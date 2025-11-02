@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   BeforeInsert,
   BeforeUpdate,
@@ -15,6 +16,7 @@ import { Category } from './category.entity';
 import { User } from './user.entity';
 import { CourseLevel, SaleType } from './enums/course.enum';
 import { ApiHideProperty } from '@nestjs/swagger';
+import { Chapter } from './chapter.entity';
 
 export interface SaleInfo {
   saleType?: SaleType;
@@ -92,6 +94,10 @@ export class Course {
 
   @DeleteDateColumn({ type: 'timestamp', name: 'deleted_at', nullable: true })
   deletedAt?: Date;
+
+  @ApiHideProperty()
+  @OneToMany('Chapter', 'course')
+  chapters?: Chapter[];
 
   @BeforeInsert()
   @BeforeUpdate()
