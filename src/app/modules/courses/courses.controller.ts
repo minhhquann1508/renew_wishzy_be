@@ -50,6 +50,7 @@ export class CoursesController {
   }
 
   @Get(':id')
+  @Public()
   async findOne(@Param('id') id: string) {
     const course = await this.coursesService.findOne(id);
     return {
