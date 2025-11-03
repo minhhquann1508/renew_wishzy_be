@@ -80,8 +80,19 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, or same-origin)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      // In development, allow all localhost origins
+      if (environment === 'development' && origin.startsWith('http://localhost')) {
+        callback(null, true);
+        return;
+      }
+
+      // Check against allowed origins list
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
