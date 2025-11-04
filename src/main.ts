@@ -70,34 +70,9 @@ async function bootstrap() {
     logger.log(`Swagger documentation available at http://localhost:${port}/api/docs`);
   }
 
-  // CORS
-  const allowedOrigins = configService
-    .get<string>(
-      'ALLOWED_ORIGINS',
-      'http://localhost:3000,http://localhost:3001,http://localhost:5173',
-    )
-    .split(',');
-
+  // CORS - Allow all origins
   app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      // In development, allow all localhost origins
-      if (environment === 'development' && origin.startsWith('http://localhost')) {
-        callback(null, true);
-        return;
-      }
-
-      // Check against allowed origins list
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: true, // Allow all origins
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
