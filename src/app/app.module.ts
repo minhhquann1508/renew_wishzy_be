@@ -19,6 +19,7 @@ import { LecturesModule } from './modules/lectures/lectures.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
     VouchersModule,
     OrdersModule,
     EnrollmentsModule,
+    UploadsModule,
   ],
   providers: [
     // Global Guards

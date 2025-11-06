@@ -7,13 +7,19 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { User } from 'src/app/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
-@Public()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UsersService,
+  ) {}
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({
@@ -30,6 +36,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Get('verify-email')
   @ApiOperation({ summary: 'Verify user email with token' })
   @ApiQuery({ name: 'token', description: 'Email verification token', required: true })
@@ -43,6 +50,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('resend-verification')
   @ApiOperation({ summary: 'Resend verification email' })
   @ApiResponse({ status: 200, description: 'Verification email sent successfully' })
@@ -55,6 +63,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
@@ -81,6 +90,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset email sent successfully' })
@@ -92,6 +102,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Put('reset-password')
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiQuery({ name: 'token', description: 'Password reset token', required: true })
@@ -108,6 +119,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('refresh-token')
   @ApiOperation({ summary: 'Refresh access token using refresh token from cookie' })
   @ApiResponse({ status: 200, description: 'New access token generated successfully' })
@@ -122,6 +134,15 @@ export class AuthController {
     return this.authService.refreshToken({ refreshToken });
   }
 
+  @Get('profile')
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired access token' })
+  async getProfile(@CurrentUser() user: User) {
+    return this.userService.findOne(user.id);
+  }
+
+  @Public()
   @Post('logout')
   @ApiOperation({ summary: 'Logout and clear refresh token cookie' })
   @ApiResponse({ status: 200, description: 'Logout successful' })

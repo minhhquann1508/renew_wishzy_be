@@ -255,4 +255,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
+
+  async getProfile() {}
 }
