@@ -8,6 +8,7 @@ export class BunnyService {
   private readonly bunnyUrl: string;
   private readonly bunnyApiKey: string;
   private readonly bunnyLibraryId: string;
+  private readonly bunnyCdnHostname: string;
 
   constructor(
     private configService: ConfigService,
@@ -16,6 +17,7 @@ export class BunnyService {
     this.bunnyUrl = this.configService.get<string>('BUNNY_URL');
     this.bunnyApiKey = this.configService.get<string>('BUNNY_API_KEY');
     this.bunnyLibraryId = this.configService.get<string>('BUNNY_LIBRARY_ID');
+    this.bunnyCdnHostname = this.configService.get<string>('BUNNY_CDN_HOSTNAME');
   }
 
   async uploadVideo(file: Express.Multer.File): Promise<any> {
@@ -52,8 +54,9 @@ export class BunnyService {
 
       return {
         videoId: videoId,
-        videoUrl: `https://iframe.mediadelivery.net/embed/${this.bunnyLibraryId}/${videoId}`,
-        thumbnailUrl: `https://vz-${this.bunnyLibraryId}.b-cdn.net/${videoId}/thumbnail.jpg`,
+        videoUrl: `https://${this.bunnyCdnHostname}/${videoId}/play_720p.mp4`,
+        thumbnailUrl: `https://${this.bunnyCdnHostname}/${videoId}/thumbnail.jpg`,
+        iframeUrl: `https://iframe.mediadelivery.net/embed/${this.bunnyLibraryId}/${videoId}`,
       };
     } catch (error) {
       console.error('Bunny upload error:', error.response?.data || error.message);
