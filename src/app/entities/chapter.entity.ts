@@ -5,11 +5,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Course } from './course.entity';
+import { Lecture } from './lecture.entity';
 
 @Entity('chapters')
 export class Chapter {
@@ -44,4 +46,9 @@ export class Chapter {
   @ManyToOne('Course', 'chapters', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'course_id' })
   course?: Course;
+
+  // @ApiHideProperty()
+  // @OneToMany('Lecture', 'chapter', { onDelete: 'CASCADE' })
+  // @JoinColumn({ name: 'chapter_id' })
+  // lecture?: Lecture[];
 }

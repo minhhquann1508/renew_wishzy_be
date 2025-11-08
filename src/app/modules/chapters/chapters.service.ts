@@ -34,10 +34,40 @@ export class ChaptersService {
     const chapters = await this.chapterRepository
       .createQueryBuilder('chapter')
       .leftJoinAndSelect('chapter.course', 'course')
-      .select(['chapter', 'course.id', 'course.name'])
-      .where('chapter.courseId = :courseId', { courseId })
-      .getMany();
-    return chapters;
+      .leftJoin('lectures', 'lecture', 'lecture.chapter_id = chapter.id')
+      .select([
+        'chapter',
+        'course.id',
+        'course.name',
+        'lecture.id',
+        'lecture.name',
+        'lecture.duration',
+        'lecture.is_preview',
+        'lecture.order_index',
+        'lecture.file_url',
+      ])
+      .where('chapter.course_id = :courseId', { courseId })
+      .getRawAndEntities();
+
+    const result = chapters.entities.map((chapter) => {
+      const lecturesForChapter = chapters.raw
+        .filter((raw) => raw.chapter_id === chapter.id && raw.lecture_id !== null)
+        .map((raw) => ({
+          id: raw.lecture_id,
+          name: raw.lecture_name,
+          duration: raw.lecture_duration,
+          isPreview: raw.is_preview,
+          orderIndex: raw.order_index,
+          fileUrl: raw.is_preview ? raw.file_url : null,
+        }));
+
+      return {
+        ...chapter,
+        lecture: lecturesForChapter,
+      };
+    });
+
+    return result as Chapter[];
   }
 
   async findOne(id: string): Promise<Chapter> {
