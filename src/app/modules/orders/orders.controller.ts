@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, Query, Req } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller, Get, Post, Body, Param, Query, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrderDto } from './dto/filter-order.dto';
@@ -56,7 +56,7 @@ export class OrdersController {
 
   @Get('payment-callback')
   @Public()
-  async vnpayCallback(@Query() query: any) {
+  async vnpayCallback(@Query() query: any, @Res() res: Response) {
     const orderId = query.vnp_TxnRef;
     const responseCode = query.vnp_ResponseCode;
     const transactionStatus = query.vnp_TransactionStatus;
@@ -64,10 +64,9 @@ export class OrdersController {
     const isValid = await this.ordersService.verifyVnpayReturn(query);
 
     if (!isValid) {
-      return {
-        success: false,
-        message: 'Invalid VNPay signature',
-      };
+      // Redirect to FE with error status
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      return res.redirect(`${frontendUrl}/payment-result?status=invalid&orderId=${orderId}`);
     }
 
     // Check if payment successful
@@ -82,16 +81,18 @@ export class OrdersController {
         };
       });
       await this.enrollmentService.create(enrollentDatas);
-      return {
-        message: 'Payment successful. Order completed.',
-        order,
-      };
+
+      // Redirect to FE with success status and orderId
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      return res.redirect(`${frontendUrl}/payment-result?status=success&orderId=${orderId}`);
     } else {
-      const order = await this.ordersService.updateOrderStatus(orderId, OrderStatus.CANCELLED);
-      return {
-        message: `Payment failed. Response code: ${responseCode}`,
-        order,
-      };
+      await this.ordersService.updateOrderStatus(orderId, OrderStatus.CANCELLED);
+
+      // Redirect to FE with failure status
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      return res.redirect(
+        `${frontendUrl}/payment-result?status=failed&orderId=${orderId}&code=${responseCode}`,
+      );
     }
   }
 

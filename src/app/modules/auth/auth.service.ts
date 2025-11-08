@@ -39,14 +39,17 @@ export class AuthService {
   async register(registerUserDto: RegisterUserDto): Promise<void> {
     const { email, password, confirmPassword, fullName } = registerUserDto;
 
-    // Check if passwords match
     if (password !== confirmPassword) {
       throw new BadRequestException('Passwords do not match');
     }
-
-    // Check if user already exists
     const existingUser = await this.userRepository.findOne({ where: { email } });
+
     if (existingUser) {
+      if (!existingUser.verified) {
+        throw new ConflictException(
+          'Email already registered but not verified. Please check your email or request a new verification link.',
+        );
+      }
       throw new ConflictException('Email already exists');
     }
 
