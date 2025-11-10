@@ -18,7 +18,7 @@ export class EnrollmentsController {
     const enrollments = await this.enrollmentsService.findAllEnrollmentOfUser(userId);
     return {
       message: 'Enrollments retrieved successfully',
-      enrollments,
+      ...enrollments,
     };
   }
 
@@ -27,7 +27,7 @@ export class EnrollmentsController {
     const enrollments = await this.enrollmentsService.findAllEnrollmentOfUser(user.id);
     return {
       message: 'Your enrollments retrieved successfully',
-      enrollments,
+      ...enrollments,
     };
   }
 
