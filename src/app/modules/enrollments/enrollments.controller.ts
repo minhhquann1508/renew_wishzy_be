@@ -15,37 +15,21 @@ export class EnrollmentsController {
   @Get('user/:userId')
   @Roles(UserRole.ADMIN)
   async findAllEnrollmentOfUser(@Param('userId') userId: string) {
-    const enrollments = await this.enrollmentsService.findAllEnrollmentOfUser(userId);
-    return {
-      message: 'Enrollments retrieved successfully',
-      ...enrollments,
-    };
+    return this.enrollmentsService.findAllEnrollmentOfUser(userId);
   }
 
   @Get('my-enrollments')
   async getMyEnrollments(@CurrentUser() user: User) {
-    const enrollments = await this.enrollmentsService.findAllEnrollmentOfUser(user.id);
-    return {
-      message: 'Your enrollments retrieved successfully',
-      ...enrollments,
-    };
+    return this.enrollmentsService.findAllEnrollmentOfUser(user.id);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const enrollment = await this.enrollmentsService.findOne(id);
-    return {
-      message: 'Enrollment retrieved successfully',
-      ...enrollment,
-    };
+    return this.enrollmentsService.findOne(id);
   }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateEnrollmentDto: UpdateEnrollmentDto) {
-    const enrollment = await this.enrollmentsService.update(id, updateEnrollmentDto);
-    return {
-      message: 'Enrollment updated successfully',
-      ...enrollment,
-    };
+    return this.enrollmentsService.update(id, updateEnrollmentDto);
   }
 }
