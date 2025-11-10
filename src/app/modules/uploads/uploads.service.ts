@@ -11,6 +11,29 @@ export class UploadsService {
     private readonly bunnyService: BunnyService,
   ) {}
 
+  async uploadImage(file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException('Only image files (JPEG, PNG, JPG, WEBP) are allowed');
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size must be less than 5MB');
+    }
+
+    const result = await this.cloudinaryService.uploadImage(file, 'wishzy/images');
+
+    return {
+      message: 'Image uploaded successfully',
+      ...result,
+    };
+  }
+
   async uploadAvatar(userId: string, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
