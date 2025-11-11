@@ -22,6 +22,7 @@ import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { BannersModule } from './modules/banners/banners.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { CommentsModule } from './modules/comments/comments.module';
     UploadsModule,
     BannersModule,
     CommentsModule,
+    WishlistModule,
   ],
   providers: [
     // Global Guards
