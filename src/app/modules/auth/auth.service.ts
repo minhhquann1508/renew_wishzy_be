@@ -166,7 +166,7 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    await this.mailService.sendResetPasswordEmail(email, resetToken, user.fullName);
+    await this.mailService.sendPasswordResetEmail(email, resetToken, user.fullName);
   }
 
   generateAccessToken(user: User): string {
