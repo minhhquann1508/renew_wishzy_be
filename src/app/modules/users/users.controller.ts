@@ -19,8 +19,9 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { UserRole } from 'src/app/entities/user.entity';
+import { User, UserRole } from 'src/app/entities/user.entity';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Users')
 @ApiBearerAuth('bearer')
@@ -62,6 +63,36 @@ export class UsersController {
 
     return {
       message: 'Users retrieved successfully',
+      data: result,
+    };
+  }
+
+  @Get('instructors/list')
+  @Public()
+  @ApiOperation({ summary: 'Get list of instructors' })
+  @ApiResponse({ status: 200, description: 'Instructors retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllInstructors(@Query() filterDto: FilterUserDto) {
+    const result = await this.usersService.findAllInstructors(filterDto);
+
+    return {
+      message: 'Instructors retrieved successfully',
+      data: result,
+    };
+  }
+
+  @Get('instructors/my-students')
+  @Roles(UserRole.INSTRUCTOR)
+  @ApiOperation({ summary: 'Get students enrolled in instructor courses' })
+  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - User is not an instructor' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Only instructors can access' })
+  async getInstructorStudents(@CurrentUser() user: User, @Query() filterDto: FilterUserDto) {
+    const result = await this.usersService.getInstructorStudents(user.id, filterDto);
+
+    return {
+      message: 'Students retrieved successfully',
       data: result,
     };
   }

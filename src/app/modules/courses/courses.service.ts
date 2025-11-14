@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from 'src/app/entities/course.entity';
 import { Repository } from 'typeorm';
 import { PaginationResponse } from 'src/app/shared/utils/response-utils';
+import removeAccents from 'remove-accents';
 
 @Injectable()
 export class CoursesService {
@@ -33,16 +34,15 @@ export class CoursesService {
       status,
     } = filter;
 
+    // Normalize search name for accent-insensitive search
+    const searchName = name ? removeAccents(name.toLowerCase()) : null;
+
     const queryBuilder = this.courseRepository
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.category', 'category')
       .leftJoin('course.creator', 'creator')
       .addSelect(['creator.id', 'creator.fullName', 'creator.email'])
       .leftJoinAndSelect('course.chapters', 'chapter');
-
-    if (name) {
-      queryBuilder.andWhere('course.name LIKE :name', { name: `%${name}%` });
-    }
     if (categoryId) {
       queryBuilder.andWhere('course.categoryId = :categoryId', { categoryId });
     }
@@ -65,12 +65,22 @@ export class CoursesService {
       queryBuilder.andWhere('course.status = :status', { status });
     }
 
-    queryBuilder.skip((page - 1) * limit);
-    queryBuilder.take(limit);
-    const [courses, total] = await queryBuilder.getManyAndCount();
+    // Get all courses first
+    let [courses, total] = await queryBuilder.getManyAndCount();
+
+    // Filter by name with accent-insensitive search
+    if (searchName) {
+      courses = courses.filter((course) =>
+        removeAccents(course.name.toLowerCase()).includes(searchName),
+      );
+      total = courses.length;
+    }
+
+    // Apply pagination after filtering
+    const paginatedCourses = courses.slice((page - 1) * limit, page * limit);
 
     return {
-      items: courses,
+      items: paginatedCourses,
       pagination: {
         totalPage: Math.ceil(total / limit),
         totalItems: total,
@@ -114,5 +124,60 @@ export class CoursesService {
   async remove(id: string): Promise<void> {
     // Soft delete
     await this.courseRepository.softDelete(id);
+  }
+
+  async getHotCourses(page: number = 1, limit: number = 10): Promise<PaginationResponse<Course>> {
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.category', 'category')
+      .leftJoin('course.creator', 'creator')
+      .addSelect(['creator.id', 'creator.fullName', 'creator.email'])
+      .leftJoinAndSelect('course.chapters', 'chapter')
+      .where('course.status = :status', { status: true })
+      .orderBy('course.averageRating', 'DESC')
+      .addOrderBy('course.numberOfStudents', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [courses, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      items: courses,
+      pagination: {
+        totalPage: Math.ceil(total / limit),
+        totalItems: total,
+        currentPage: page,
+        itemsPerPage: limit,
+      },
+    };
+  }
+
+  async getInstructorCourses(
+    instructorId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginationResponse<Course>> {
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.category', 'category')
+      .leftJoin('course.creator', 'creator')
+      .addSelect(['creator.id', 'creator.fullName', 'creator.email'])
+      .leftJoinAndSelect('course.chapters', 'chapter')
+      .where('course.createdBy = :instructorId', { instructorId })
+      .orderBy('course.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [courses, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      items: courses,
+      pagination: {
+        totalPage: Math.ceil(total / limit),
+        totalItems: total,
+        currentPage: page,
+        itemsPerPage: limit,
+      },
+    };
   }
 }

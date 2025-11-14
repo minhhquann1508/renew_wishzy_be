@@ -16,7 +16,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { FilterCourseDto } from './dto/filter-course.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from 'src/app/entities/user.entity';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from 'src/app/entities/user.entity';
 import { Public } from '../auth/decorators/public.decorator';
@@ -45,6 +45,48 @@ export class CoursesController {
 
     return {
       message: 'Courses retrieved successfully',
+      ...results,
+    };
+  }
+
+  @Get('hot-course')
+  @Public()
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number', example: 1 })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
+  async getHotCourses(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    const results = await this.coursesService.getHotCourses(page, limit);
+
+    return {
+      message: 'Hot courses retrieved successfully',
+      ...results,
+    };
+  }
+
+  @Get('instructor/my-courses')
+  @Roles(UserRole.INSTRUCTOR, UserRole.ADMIN)
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number', example: 1 })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
+  async getMyInstructorCourses(
+    @CurrentUser() user: User,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    const results = await this.coursesService.getInstructorCourses(user.id, page, limit);
+
+    return {
+      message: 'Instructor courses retrieved successfully',
       ...results,
     };
   }

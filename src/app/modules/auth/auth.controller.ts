@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Get, Query, Put, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Put,
+  Res,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -6,6 +16,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { GoogleAuthDto } from './dto/google-auth.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from 'src/app/entities/user.entity';
@@ -150,6 +161,41 @@ export class AuthController {
     res.clearCookie('refreshToken');
     return {
       message: 'Logout successful',
+    };
+  }
+
+  @Public()
+  @Post('google')
+  @ApiOperation({ summary: 'Login or register with Google' })
+  @ApiResponse({ status: 200, description: 'Google authentication successful' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid Google token' })
+  async googleAuth(
+    @Body() googleAuthDto: GoogleAuthDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Accept both idToken and credential field names
+    const token = googleAuthDto.idToken || googleAuthDto.credential;
+
+    if (!token) {
+      throw new BadRequestException('Google token is required (idToken or credential)');
+    }
+
+    const user = await this.authService.googleAuth(token);
+    const accessToken = this.authService.generateAccessToken(user);
+    const refreshToken = this.authService.generateRefreshToken(user);
+
+    // Set refresh token in httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      user,
+      accessToken,
+      message: 'Google authentication successful',
     };
   }
 }

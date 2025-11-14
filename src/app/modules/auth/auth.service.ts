@@ -10,22 +10,27 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { User } from '../../entities/user.entity';
+import { User, LoginType } from '../../entities/user.entity';
 import { MailService } from '../mail/mail.service';
 import * as crypto from 'crypto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(this.configService.get<string>('GOOGLE_CLIENT_ID'));
+  }
 
   private sanitizeUser(user: User): User {
     delete user.password;
@@ -260,4 +265,54 @@ export class AuthService {
   }
 
   async getProfile() {}
+
+  async googleAuth(idToken: string): Promise<User> {
+    try {
+      // Verify Google ID token
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new BadRequestException('Invalid Google token');
+      }
+
+      const { email, name, picture } = payload;
+
+      if (!email) {
+        throw new BadRequestException('Email not provided by Google');
+      }
+
+      // Check if user exists
+      let user = await this.userRepository.findOne({ where: { email } });
+
+      if (user) {
+        // User exists - update login type if needed
+        if (user.loginType !== LoginType.GOOGLE) {
+          user.loginType = LoginType.GOOGLE;
+          await this.userRepository.save(user);
+        }
+      } else {
+        // Create new user with Google account
+        user = this.userRepository.create({
+          email,
+          fullName: name || email.split('@')[0],
+          avatar: picture,
+          loginType: LoginType.GOOGLE,
+          verified: true, // Google accounts are pre-verified
+        });
+
+        await this.userRepository.save(user);
+      }
+
+      return this.sanitizeUser(user);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to authenticate with Google');
+    }
+  }
 }
