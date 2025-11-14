@@ -42,13 +42,24 @@ export class CategoriesService {
       }
     }
 
-    const [categories, total] = await queryBuilder
+    // Lấy thêm totalCourse khi query
+    queryBuilder
+      .leftJoin('courses', 'course', 'course.category_id = category.id AND course.deleted_at IS NULL')
+      .addSelect('COUNT(course.id)', 'totalCourses')
+      .groupBy('category.id')
       .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+      .take(limit);
+
+    const result = await queryBuilder.getRawAndEntities();
+    const total = await this.categoryRepository.createQueryBuilder('category').getCount();
+
+    const categoriesWithCount = result.entities.map((category: Category, index: number) => ({
+      ...category,
+      totalCourses: parseInt(result.raw[index]?.totalCourses || '0'),
+    }));
 
     return {
-      items: categories,
+      items: categoriesWithCount,
       pagination: {
         totalPage: Math.ceil(total / limit),
         totalItems: total,
@@ -59,11 +70,26 @@ export class CategoriesService {
   }
 
   async findById(id: string): Promise<Category> {
-    const category = await this.categoryRepository.findOne({ where: { id } });
-    if (!category) {
+    const queryBuilder = this.categoryRepository
+      .createQueryBuilder('category')
+      .where('category.id = :id', { id })
+      .leftJoin('courses', 'course', 'course.category_id = category.id AND course.deleted_at IS NULL')
+      .addSelect('COUNT(course.id)', 'totalCourses')
+      .groupBy('category.id');
+
+    const result = await queryBuilder.getRawAndEntities();
+
+    if (!result.entities.length) {
       throw new BadRequestException(`Category with ID ${id} not found`);
     }
-    return category;
+
+    const category = result.entities[0];
+    const totalCourses = parseInt(result.raw[0]?.totalCourses || '0');
+
+    return {
+      ...category,
+      totalCourses,
+    } as Category;
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
